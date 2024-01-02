@@ -6,7 +6,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -27,6 +27,9 @@ import (
 	//"path/filepath"
 	"github.com/spf13/cobra"
 )
+
+var HOME = os.Getenv("HOME")
+var PROJECT_HOME = HOME + "/Default"
 
 // createCmd represents the create command
 var createCmd = &cobra.Command{
@@ -93,11 +96,25 @@ to quickly create a Cobra application.`,
 	},
 }
 
+var journalCmd = &cobra.Command{
+	Use:   "journal",
+	Short: "Creates a journal markdown file with today's date",
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println("journal called")
+		err := task.CreateJournal()
+		if err != nil {
+			fmt.Println("Unable to create journal")
+		}
+
+	},
+}
+
 func init() {
 	rootCmd.AddCommand(createCmd)
 	createCmd.AddCommand(projectCmd)
 	createCmd.AddCommand(taskCmd)
 	createCmd.AddCommand(effortCmd)
+	createCmd.AddCommand(journalCmd)
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
@@ -125,8 +142,7 @@ func createProjectCommand(cmd *cobra.Command, args []string) {
 	// TODO: validate directory name
 
 	// Make sure that home directory exists
-	projHome := "/Users/aldoperez/Projects"
-	if err := createProjectHomeDir(projHome); err != nil {
+	if err := createProjectHomeDir(); err != nil {
 		fmt.Println(err)
 		return
 	}
@@ -140,7 +156,7 @@ func createProjectCommand(cmd *cobra.Command, args []string) {
 		fmt.Println("Empty Prefix. Generating one")
 		// Get the name of the project based on the contents of the home directory
 		var err error
-		prefix, err = utils.GeneratePrefix(projHome)
+		prefix, err = utils.GeneratePrefix(PROJECT_HOME)
 		if err != nil {
 			fmt.Println(err)
 			return
@@ -149,7 +165,7 @@ func createProjectCommand(cmd *cobra.Command, args []string) {
 	projName := fmt.Sprintf("%s-%s", prefix, projBaseName)
 	fmt.Println(projName)
 	fmt.Println("making a project called: ", projName)
-	projNameFullPath := filepath.Join(projHome, projName)
+	projNameFullPath := filepath.Join(PROJECT_HOME, projName)
 	// Make sure that there is not a project with the same name
 	if err := os.Mkdir(projNameFullPath, 0755); err != nil {
 		fmt.Println("Error: Problems creating the project")
@@ -174,33 +190,33 @@ func createProjectCommand(cmd *cobra.Command, args []string) {
 	}
 }
 
-//func generatePrefix(directory string) (string, error) {
-//	dirItems, err := os.ReadDir(directory)
-//	if err != nil {
-//		fmt.Println("We had problems reading the home dir")
-//		return "", err
-//	}
-//	// How many dirs
-//	count := 0
-//	for _, file := range dirItems {
-//		//fmt.Println(file.Name())
-//		if file.IsDir(){
-//			//fmt.Println("Its a directory")
-//			count++
+//	func generatePrefix(directory string) (string, error) {
+//		dirItems, err := os.ReadDir(directory)
+//		if err != nil {
+//			fmt.Println("We had problems reading the home dir")
+//			return "", err
 //		}
+//		// How many dirs
+//		count := 0
+//		for _, file := range dirItems {
+//			//fmt.Println(file.Name())
+//			if file.IsDir(){
+//				//fmt.Println("Its a directory")
+//				count++
+//			}
+//		}
+//		fmt.Println("We have ", count, " Directories")
+//		prefix := fmt.Sprintf("%02d", count+1)
+//		return prefix, nil
 //	}
-//	fmt.Println("We have ", count, " Directories")
-//	prefix := fmt.Sprintf("%02d", count+1)
-//	return prefix, nil
-//}
-func createProjectHomeDir(projHome string) error {
-	_, err := os.Stat(projHome)
+func createProjectHomeDir() error {
+	_, err := os.Stat(PROJECT_HOME)
 	if err != nil {
 
 		if errors.Is(err, os.ErrNotExist) {
 			// path/to/whatever does *not* exist
-			fmt.Println("A project home folder does not exist. Creating at ", projHome)
-			if err := os.Mkdir(projHome, 0755); err != nil {
+			fmt.Println("A project home folder does not exist. Creating at ", PROJECT_HOME)
+			if err := os.Mkdir(PROJECT_HOME, 0755); err != nil {
 				fmt.Println("Something Happened: directory unable to be created")
 				return err
 			}
@@ -210,6 +226,6 @@ func createProjectHomeDir(projHome string) error {
 			return err
 		}
 	}
-	fmt.Println("Project Home exists at: ", projHome)
+	fmt.Println("Project Home exists at: ", PROJECT_HOME)
 	return nil
 }
